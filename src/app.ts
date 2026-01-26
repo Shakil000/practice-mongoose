@@ -1,6 +1,5 @@
 //const express = require('express')
 import express, { Application, Request, Response } from 'express';
-import { Note } from './App/models/notes.model';
 import { notesRoutes } from './controllers/notes.controller';
 import { userRoutes } from './controllers/user.controller';
 

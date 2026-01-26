@@ -1,25 +1,31 @@
 import { Request, Response } from "express"
 import express from "express"
 import { Note } from "../App/models/notes.model";
-
+import z from "zod";
+import { Types } from 'mongoose';
+import { isValidObjectId } from "mongoose";
+import { User } from "../App/models/user.model";
 
 
 export const notesRoutes = express.Router();
 
-notesRoutes.post('/create-note', async(req: Request, res: Response) => {
-const body = req.body
-    // ! notesRoutesroch-1 of store data in database
-//   const myNote = new Note({
-//     title: "Learning Mongoose",
-//     tags: {label: "Database"}
-//     // content: "Mongoose",
-//     // category: "Study",
-//     // pinned: true,
-//   })
-//   await myNote.save();
 
- // ! notesRoutesroch-2 of store data in database using API
- 
+const createNoteZodSchema = z.object({
+  title: z.string(),
+  content: z.string().optional(),
+  category: z.string().optional(),
+  pinned: z.boolean().optional(),
+  tags: z.object({
+    label: z.string(),
+    color: z.string(),
+  }),
+  userId: z.string(),
+    
+})
+
+notesRoutes.post('/create-note', async(req: Request, res: Response) => {
+  try {
+    const body = await createNoteZodSchema.parseAsync(req.body)
  console.log("your body",body)
  const note = await Note.create(body)
 
@@ -28,9 +34,17 @@ const body = req.body
     message: "Note Creation Done",
     note,
   })
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+      error,
+    });
+  }
 })
 notesRoutes.get('/', async(req: Request, res: Response) => {
- const notes = await Note.find()
+ const notes = await Note.find().populate('userId') // This 'userId' come from notes.model.ts. populate push user own data in the note by using the id.
 
   res.status(201).json({
     success: true,
